@@ -49,6 +49,8 @@ gravatar = Gravatar(app,
                     base_url=None)
 
 # CREATE DATABASE
+
+
 class BlogUsers(UserMixin, db.Model):
     __tablename__ = "blog_users"
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -92,7 +94,6 @@ with app.app_context():
         print("Error creating tables: ", e)
     else:
         print("Database tables created successfully.")
-
 
 
 # Create an admin-only decorator
@@ -262,20 +263,22 @@ MAIL_APP_PW = os.environ.get("EMAIL_PASSWORD")
 def contact():
     if request.method == "POST":
         data = request.form
-        send_email(data["name"], data["email"], data["phone"], data["message"])
-        return render_template("contact.html", msg_sent=True)
+        success = send_email(data)
+        return render_template("contact.html", msg_sent=success)
     return render_template("contact.html", msg_sent=False)
 
 
-def send_email(name, email, phone, message):
-    email_message = f"Subject:New Message\n\nName: {name}\nEmail: {email}\nPhone: {phone}\nMessage:{message}"
+def send_email(data):
+    email_message = f"Subject: New Message\n\nName: {data['name']}\nEmail: {data['email']}\nPhone: {data['phone']}\nMessage: {data['message']}"
     try:
-        with smtplib.SMTP("smtp.gmail.com", port=587) as connection:
+        with smtplib.SMTP("smtp.gmail.com") as connection:
             connection.starttls()
-            connection.login(MAIL_ADDRESS, MAIL_APP_PW)
-            connection.sendmail(MAIL_ADDRESS, MAIL_APP_PW, email_message)
+            connection.login(MAIL_ADDRESS, MAIL_APP_PW)  # Login to your email
+            connection.sendmail(MAIL_ADDRESS, "pstmarvellous@gmail.com", email_message)  # Send to desired recipient
+        return True  # Indicate success
     except Exception as e:
         print(f"Error sending email: {e}")
+        return False  # Indicate failure
 
 
 if __name__ == "__main__":
